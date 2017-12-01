@@ -120,7 +120,13 @@ class Network:
                  with open(file_name, 'rb') as input:
                     network = pickle.load(input)
                     networks.append(network)
-        return networks
+    def create_copy(network1):
+        network2=Network()
+        network2.create_weights(False)
+        network2.dictLayers[0].data=network1.dictLayers[0].data
+        network2.dictLayers[1].data = network1.dictLayers[1].data
+        network2.dictLayers[2].data = network1.dictLayers[2].data
+        return network2
 def read_networks(i):
         networks=[]
         filename="data/"+str(i)+'.pkl'

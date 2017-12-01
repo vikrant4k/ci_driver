@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import random
 from datetime import datetime
+import copy
 class Mutate:
     def __init__(self):
         i=1
@@ -86,39 +87,84 @@ class Mutate:
             #network2.dictLayers[2].data = network2.dictLayers[2].data + noise
 
         return network1
-
+    '''
     def do_mutate_network_sin(self,network1):
-        #layer=0
-        random.seed(datetime.now())
-        layer=randint(0,2)
-        deviation=random.uniform(0,0.01)
-        network2=network1
+        layer=0
+        #random.seed(datetime.now())
+        #layer=randint(0,2)
+        deviation = random.uniform(0, 0.008)
+        network2=Network.create_copy(network1)
+        print("layer " + str(layer)+" "+str(deviation))
         if(layer==0):
           random.seed(datetime.now())
           noise = np.random.normal(0, deviation, 22*62)
           noise= np.reshape(noise,(22,62))
           noise=(torch.from_numpy(noise)).float()
           #print(network1.dictLayers[0].data)
-          network2.dictLayers[0].data=network1.dictLayers[0].data+noise
-          #layer=1
+          network2.dictLayers[0].data=network2.dictLayers[0].data+noise
+          layer=1
           #print(network1.dictLayers[0].data)
           #network2.dictLayers[0].data = network2.dictLayers[0].data + noise
         # network2.dictLayers[0].data = network2.dictLayers[0].data + noise
         if (layer == 1):
-            random.seed(datetime.now())
+            deviation = random.uniform(0, 0.006)
             noise = np.random.normal(0, deviation, 62*19)
             noise = np.reshape(noise, (62, 19))
             noise = (torch.from_numpy(noise)).float()
-            network2.dictLayers[1].data = network1.dictLayers[1].data + noise
-           # layer=2
+            network2.dictLayers[1].data = network2.dictLayers[1].data + noise
+            #print(network1.dictLayers[1].data)
+            layer=2
            # network2.dictLayers[1].data = network2.dictLayers[1].data + noise
         if (layer == 2):
-            random.seed(datetime.now())
+            deviation = random.uniform(0, 0.001)
             noise = np.random.normal(0, deviation, 19*3)
             noise = np.reshape(noise, (19,3))
             noise = (torch.from_numpy(noise)).float()
-            network2.dictLayers[2].data = network1.dictLayers[2].data + noise
+            network2.dictLayers[2].data = network2.dictLayers[2].data + noise
+            #print(network1.dictLayers[2].data)
             #network2.dictLayers[2].data = network2.dictLayers[2].data + noise
+
+        return network2'''
+
+    def do_mutate_network_sin(self,network1):
+        #layer=0
+        #random.seed(datetime.now())
+        layer=randint(0,2)
+        deviation = random.uniform(0, 0.09)
+        network2=Network.create_copy(network1)
+        network2.layer_changed=layer
+        print("layer " + str(layer)+" "+str(deviation))
+        if(layer==0):
+          random.seed(datetime.now())
+          num_layers=randint(0,22)
+          for layer in range(0,num_layers):
+              layer_val=randint(0,21)
+              deviation = random.uniform(0, 0.06)
+              noise = np.random.normal(0, deviation, 1 * 62)
+              noise= np.reshape(noise,(1,62))
+              noise=(torch.from_numpy(noise)).float()
+              network2.dictLayers[0].data[layer_val]=network2.dictLayers[0].data[layer_val]+noise
+
+        if (layer == 1):
+            num_layers = randint(0, 62)
+            for layer in range(0,num_layers):
+                layer_val = randint(0, 61)
+                deviation = random.uniform(0, 0.02)
+                noise = np.random.normal(0, deviation, 1 * 19)
+                noise = np.reshape(noise, (1, 19))
+                noise = (torch.from_numpy(noise)).float()
+                network2.dictLayers[1].data[layer_val] = network2.dictLayers[1].data[layer_val] + noise
+
+
+        if (layer == 2):
+            num_layers = randint(0, 19)
+            for layer in range(0,num_layers):
+                layer_val = randint(0, 18)
+                deviation = random.uniform(0, 0.008)
+                noise = np.random.normal(0, deviation, 1 * 3)
+                noise = np.reshape(noise, (1, 3))
+                noise = (torch.from_numpy(noise)).float()
+                network2.dictLayers[2].data[layer_val] = network2.dictLayers[2].data[layer_val] + noise
 
         return network2
 
@@ -127,7 +173,7 @@ class Mutate:
         for j in range(0,2):
             for i in range(0,len(networks)):
                 index=i
-                if(index<int(0.25*len(networks))):
+                if(index<int(0.4*len(networks))):
                     layer=randint(0,2)
                     network1=self.do_mutate_network_sin(networks[index])
                     network1.fitness=0.0

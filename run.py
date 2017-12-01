@@ -7,15 +7,18 @@ from nueral import read_networks
 import torch
 import numpy as np
 from mutate import Mutate
-
+# 10,4,7,
 if __name__ == '__main__':
     print("started")
     MyDriver.networks=[]
-    for i in range(0,1):
-        MyDriver.networks.append(read_networks(0))
+    temp_networks=[]
+    for i in range(0,9):
+        temp_networks.append(read_networks(i))
+        #MyDriver.networks.append(read_networks(10))
+        #MyDriver.networks.append(read_networks(4))
     mutate=Mutate()
-    for i in range(0,5):
-        network=mutate.do_mutate_network_sin(MyDriver.networks[0])
+    for i in range(0,50):
+        network=mutate.do_mutate_network_sin(temp_networks[i%9])
         MyDriver.networks.append(network)
     MyDriver.index=0
     MyDriver.network=MyDriver.networks[0]
@@ -26,4 +29,4 @@ if __name__ == '__main__':
     my_driver.brake=0.0
     my_driver.count=0
     my_driver.net_score={}
-    main(my_driver)
+    main(my_driver,3001)

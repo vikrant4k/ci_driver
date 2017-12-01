@@ -37,9 +37,9 @@ from datetime import datetime
 class MyDriver(Driver):
     logging.basicConfig(filename='example.log',level=logging.INFO)
     w_distance=0.62
-    w_speed=0.20
-    w_brake=0.12
-    w_lap=0.05
+    w_speed=0.30
+    w_brake=0.07
+    #w_lap=0.0009
     w_damage=0.01
     #def on_restart(self):
     #    print(1)  
@@ -90,23 +90,25 @@ class MyDriver(Driver):
         command.steering=max(-1,command.steering) 
         command.steering=min(1,command.steering)
 
-        if(carstate.damage>0 or carstate.distance_raced>6100.00 or carstate.current_lap_time>300):
+        if(carstate.damage>0 or carstate.distance_raced>4900.00 or carstate.current_lap_time>300):
            self.msg='f'
-
+           print("Layer Changed "+str(MyDriver.network.layer_changed))
            fitness = MyDriver.w_distance * (
            self.distance)  + MyDriver.w_speed * (
-           self.speed_x / self.count) - MyDriver.w_brake * (self.brake)+MyDriver.w_lap*(carstate.current_lap_time)-MyDriver.w_damage*(carstate.damage)
+           self.speed_x / self.count) - MyDriver.w_brake * (self.brake)+-MyDriver.w_damage*(carstate.damage)
            print(fitness)
            self.net_score[MyDriver.index] = fitness
            print(str(self.speed_x / self.count) + " " + str(self.distance ) + " " + str(
                self.brake / self.count) + " " + str(carstate.current_lap_time)+" "+str(carstate.damage))
            MyDriver.network.fitness = fitness
            if((MyDriver.index+1)<len(MyDriver.networks)):
+              print(MyDriver.index)
               MyDriver.index += 1
               MyDriver.network = MyDriver.networks[MyDriver.index]
               self.reinitiaze()
               command.meta=1
            else:
+               print(str(datetime.now()))
                folder_name="data/evolution/"+str(datetime.now())
                os.makedirs(folder_name)
                for i in range(0,len(MyDriver.networks)):
