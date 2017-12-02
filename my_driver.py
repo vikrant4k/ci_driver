@@ -31,16 +31,23 @@ from cardata import CarData
 from nueral import read_networks
 from mutate import Mutate
 from datetime import datetime
+import heapq
+from random import randint
 
 
 
 class MyDriver(Driver):
     logging.basicConfig(filename='example.log',level=logging.INFO)
-    w_distance=0.62
-    w_speed=0.30
+    w_distance=0.55
+    #w_speed=0.37
+    w_speed = 0.18
     w_brake=0.07
     #w_lap=0.0009
-    w_damage=0.01
+    #w_damage=0.01
+    w_damage = 0.2
+    network_heap=[]
+    network_list=[]
+    heap_size=8
     #def on_restart(self):
     #    print(1)  
 
@@ -90,9 +97,9 @@ class MyDriver(Driver):
         command.steering=max(-1,command.steering) 
         command.steering=min(1,command.steering)
 
-        if(carstate.damage>0 or carstate.distance_raced>4900.00 or carstate.current_lap_time>300):
+        if(carstate.damage>0 or carstate.distance_raced>6400.00 or carstate.current_lap_time>160.00):
            self.msg='f'
-           print("Layer Changed "+str(MyDriver.network.layer_changed))
+           #print("Layer Changed "+str(MyDriver.network.layer_changed))
            fitness = MyDriver.w_distance * (
            self.distance)  + MyDriver.w_speed * (
            self.speed_x / self.count) - MyDriver.w_brake * (self.brake)+-MyDriver.w_damage*(carstate.damage)
@@ -104,37 +111,49 @@ class MyDriver(Driver):
            if((MyDriver.index+1)<len(MyDriver.networks)):
               print(MyDriver.index)
               MyDriver.index += 1
-              MyDriver.network = MyDriver.networks[MyDriver.index]
-              self.reinitiaze()
-              command.meta=1
            else:
-               print(str(datetime.now()))
-               folder_name="data/evolution/"+str(datetime.now())
-               os.makedirs(folder_name)
-               for i in range(0,len(MyDriver.networks)):
-                   path=folder_name+"/"+str(i)+".pkl"
-                   Network.save_networks(MyDriver.networks[i],path)
-               MyDriver.index=0
-               print("Mutation on")
-               networks=self.sort()
-               mutate=Mutate()
-               MyDriver.networks=mutate.mutate_list(networks)
-               MyDriver.network = MyDriver.networks[MyDriver.index]
-               self.reinitiaze()
-               command.meta=1
+               print("else")
+               mutate = Mutate()
+               if(MyDriver.index<=MyDriver.num_childs):
+                   MyDriver.add_network(MyDriver.network)
+                   child_netowrk=mutate.do_mutate_network_sin(MyDriver.get_best_network())
+                   MyDriver.index+=1
+                   MyDriver.networks.append(child_netowrk)
+               else:
+
+                   print(str(datetime.now()))
+                   folder_name="data/evolution/"+str(datetime.now())
+                   os.makedirs(folder_name)
+                   for i in range(0,len(MyDriver.networks)):
+                       path=folder_name+"/"+str(i)+".pkl"
+                       Network.save_networks(MyDriver.networks[i],path)
+                   MyDriver.index=0
+                   print("Mutation on")
+                   MyDriver.heap_size+=5
+                   self.sort()
+                   #MyDriver.networks=mutate.mutate_list(networks)
+                   MyDriver.num_childs=MyDriver.num_childs+int(0.1*MyDriver.num_childs)
+                   mutate=Mutate()
+                   child_netowrk = mutate.do_mutate_network_sin(MyDriver.get_best_network())
+                   MyDriver.networks=[]
+                   MyDriver.networks.append(child_netowrk)
+
+           MyDriver.network = MyDriver.networks[MyDriver.index]
+           self.reinitiaze()
+           command.meta=1
 
         car_speed=carstate.speed_x*(3.6)
         if(car_speed>=0.0 and car_speed<40.0):
           command.gear=1 
         if(car_speed>=40.0 and car_speed<70.0):
           command.gear=2 
-        if(car_speed>=70.0 and car_speed<100.0):
+        if(car_speed>=70.0 and car_speed<120.0):
           command.gear=3 
-        if(car_speed>=100.0 and car_speed<120.0):
+        if(car_speed>=120.0 and car_speed<132.0):
           command.gear=4 
-        if(car_speed>=120.0 and car_speed<140.0):
+        if(car_speed>=132.0 and car_speed<150.0):
           command.gear=5 
-        if(car_speed>=140.0):
+        if(car_speed>=150.0):
           command.gear=6              
         if not command.gear:
             command.gear = carstate.gear or 1
@@ -148,6 +167,34 @@ class MyDriver(Driver):
         logging.info(str(command.accelerator) +","+str(command.brake) +","+str( command.steering)+","+str(l_predict))      
         
         return command
+
+    def add_network(network):
+        if(len(MyDriver.network_heap)<MyDriver.heap_size):
+            heapq.heappush(MyDriver.network_heap,network.fitness)
+            MyDriver.network_list.append(network)
+        else:
+            min_fitness=MyDriver.network_heap[0]
+            if(min_fitness<network.fitness):
+                heapq.heappop(MyDriver.network_heap)
+                MyDriver.remove_network(min_fitness)
+                MyDriver.network_list.append(network)
+                heapq.heappush(MyDriver.network_heap,network.fitness)
+
+    def get_best_network():
+        if(len(MyDriver.network_list)==1):
+            return  MyDriver.network_list[0]
+        return MyDriver.network_list[randint(0, len(MyDriver.network_list) - 1)]
+
+    def remove_network(fitness):
+
+        for i in range(0,len(MyDriver.network_list)):
+
+            if(MyDriver.network_list[i].fitness==fitness):
+                print("Fotness removed "+str(fitness))
+                del MyDriver.network_list[i]
+                return
+
+
     def reinitiaze(self):
         self.count=0
         self.speed_x=0.0
@@ -166,9 +213,10 @@ class MyDriver(Driver):
                     networks[j]=temp
 
         for i in range(0,int(0.4*len(networks))):
+            MyDriver.add_network(networks[i])
             networks2.append(networks[i])
         #networks2.append(networks[len(networks)-1])
-        networks2.append(networks[len(networks) - 2])
+
         return networks2
 
         return networks2

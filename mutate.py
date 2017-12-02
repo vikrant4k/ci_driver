@@ -139,7 +139,7 @@ class Mutate:
           num_layers=randint(0,22)
           for layer in range(0,num_layers):
               layer_val=randint(0,21)
-              deviation = random.uniform(0, 0.06)
+              deviation = random.uniform(0, 0.01)
               noise = np.random.normal(0, deviation, 1 * 62)
               noise= np.reshape(noise,(1,62))
               noise=(torch.from_numpy(noise)).float()
@@ -149,7 +149,7 @@ class Mutate:
             num_layers = randint(0, 62)
             for layer in range(0,num_layers):
                 layer_val = randint(0, 61)
-                deviation = random.uniform(0, 0.02)
+                deviation = random.uniform(0, 0.008)
                 noise = np.random.normal(0, deviation, 1 * 19)
                 noise = np.reshape(noise, (1, 19))
                 noise = (torch.from_numpy(noise)).float()
@@ -160,7 +160,7 @@ class Mutate:
             num_layers = randint(0, 19)
             for layer in range(0,num_layers):
                 layer_val = randint(0, 18)
-                deviation = random.uniform(0, 0.008)
+                deviation = random.uniform(0, 0.004)
                 noise = np.random.normal(0, deviation, 1 * 3)
                 noise = np.reshape(noise, (1, 3))
                 noise = (torch.from_numpy(noise)).float()
@@ -170,7 +170,7 @@ class Mutate:
 
     def mutate_list(self,networks):
         networks2=[]
-        for j in range(0,2):
+        for j in range(0,1):
             for i in range(0,len(networks)):
                 index=i
                 if(index<int(0.4*len(networks))):
